@@ -1,0 +1,74 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:s="clr-namespace:System;assembly=mscorlib">
+
+    <!-- Window titles -->
+    <s:String x:Key="Title.AddPanel">パネルを追加</s:String>
+    <s:String x:Key="Title.Sessions">セッション管理</s:String>
+    <s:String x:Key="Title.Settings">設定</s:String>
+    <s:String x:Key="Title.About">バージョン情報</s:String>
+    <s:String x:Key="Title.Preview">プレビュー</s:String>
+    <s:String x:Key="Title.InjectJS">JavaScript を注入</s:String>
+    <s:String x:Key="Title.InjectCSS">CSS を注入</s:String>
+    <s:String x:Key="Title.EditJS">JavaScript を編集</s:String>
+    <s:String x:Key="Title.EditCSS">CSS を編集</s:String>
+
+    <!-- Common buttons -->
+    <s:String x:Key="Btn.OK">OK</s:String>
+    <s:String x:Key="Btn.Cancel">キャンセル</s:String>
+    <s:String x:Key="Btn.Close">閉じる</s:String>
+    <s:String x:Key="Btn.Go">移動</s:String>
+    <s:String x:Key="Btn.Run">実行</s:String>
+    <s:String x:Key="Btn.Save">保存</s:String>
+    <s:String x:Key="Btn.Delete">削除</s:String>
+
+    <!-- Main window -->
+    <s:String x:Key="Main.AddPanel">パネルを追加</s:String>
+    <s:String x:Key="Main.Sessions">セッション</s:String>
+    <s:String x:Key="Tooltip.Settings">設定</s:String>
+    <s:String x:Key="Tooltip.About">バージョン情報</s:String>
+
+    <!-- BrowserColumn -->
+    <s:String x:Key="Tooltip.InjectMenu">JS / CSS を注入</s:String>
+    <s:String x:Key="Menu.PanelSettings">パネルの設定...</s:String>
+    <s:String x:Key="Menu.InjectJs">JavaScript を注入...</s:String>
+    <s:String x:Key="Menu.InjectCss">CSS を注入...</s:String>
+    <s:String x:Key="Menu.ClosePanel">このパネルを閉じる</s:String>
+
+    <!-- Panel Settings dialog -->
+    <s:String x:Key="Title.PanelSettings">パネルの設定</s:String>
+    <s:String x:Key="Btn.GetCurrentUrl">現在のURLを取得</s:String>
+
+    <!-- Preview window -->
+    <s:String x:Key="Tooltip.ClosePreview">プレビューを閉じる</s:String>
+
+    <!-- Add Panel dialog -->
+    <s:String x:Key="Label.Url">URL:</s:String>
+    <s:String x:Key="Label.Width">幅:</s:String>
+    <s:String x:Key="Label.Session">セッション:</s:String>
+    <s:String x:Key="Label.Name">名前:</s:String>
+    <s:String x:Key="Item.NewSession">+ 新しいセッション...</s:String>
+    <s:String x:Key="Default.NewSessionName">新しいセッション</s:String>
+
+    <!-- Inject dialog -->
+    <s:String x:Key="Label.JS">JavaScript:</s:String>
+    <s:String x:Key="Label.CSS">CSS:</s:String>
+
+    <!-- Session Manager dialog -->
+    <s:String x:Key="Col.SessionName">名前</s:String>
+
+    <!-- Settings dialog -->
+    <s:String x:Key="Label.Theme">テーマ</s:String>
+    <s:String x:Key="Label.Language">言語</s:String>
+    <s:String x:Key="Item.ThemeAuto">自動</s:String>
+    <s:String x:Key="Item.ThemeLight">ライト</s:String>
+    <s:String x:Key="Item.ThemeDark">ダーク</s:String>
+    <s:String x:Key="Item.LangJa">日本語</s:String>
+    <s:String x:Key="Item.LangEn">English</s:String>
+
+    <!-- About dialog -->
+    <s:String x:Key="Label.Author">作者:</s:String>
+    <s:String x:Key="Prefix.Version">バージョン </s:String>
+    <s:String x:Key="Prefix.Commit">コミット: </s:String>
+
+</ResourceDictionary>

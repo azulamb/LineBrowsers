@@ -1,0 +1,74 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:s="clr-namespace:System;assembly=mscorlib">
+
+    <!-- Window titles -->
+    <s:String x:Key="Title.AddPanel">Add Panel</s:String>
+    <s:String x:Key="Title.Sessions">Sessions</s:String>
+    <s:String x:Key="Title.Settings">Settings</s:String>
+    <s:String x:Key="Title.About">About</s:String>
+    <s:String x:Key="Title.Preview">Preview</s:String>
+    <s:String x:Key="Title.InjectJS">Inject JavaScript</s:String>
+    <s:String x:Key="Title.InjectCSS">Inject CSS</s:String>
+    <s:String x:Key="Title.EditJS">Edit JavaScript</s:String>
+    <s:String x:Key="Title.EditCSS">Edit CSS</s:String>
+
+    <!-- Common buttons -->
+    <s:String x:Key="Btn.OK">OK</s:String>
+    <s:String x:Key="Btn.Cancel">Cancel</s:String>
+    <s:String x:Key="Btn.Close">Close</s:String>
+    <s:String x:Key="Btn.Go">Go</s:String>
+    <s:String x:Key="Btn.Run">Run</s:String>
+    <s:String x:Key="Btn.Save">Save</s:String>
+    <s:String x:Key="Btn.Delete">Delete</s:String>
+
+    <!-- Main window -->
+    <s:String x:Key="Main.AddPanel">Add Panel</s:String>
+    <s:String x:Key="Main.Sessions">Sessions</s:String>
+    <s:String x:Key="Tooltip.Settings">Settings</s:String>
+    <s:String x:Key="Tooltip.About">About</s:String>
+
+    <!-- BrowserColumn -->
+    <s:String x:Key="Tooltip.InjectMenu">Inject JS / CSS</s:String>
+    <s:String x:Key="Menu.PanelSettings">Panel Settings...</s:String>
+    <s:String x:Key="Menu.InjectJs">Inject JavaScript...</s:String>
+    <s:String x:Key="Menu.InjectCss">Inject CSS...</s:String>
+    <s:String x:Key="Menu.ClosePanel">Close this panel</s:String>
+
+    <!-- Panel Settings dialog -->
+    <s:String x:Key="Title.PanelSettings">Panel Settings</s:String>
+    <s:String x:Key="Btn.GetCurrentUrl">Get current URL</s:String>
+
+    <!-- Preview window -->
+    <s:String x:Key="Tooltip.ClosePreview">Close preview</s:String>
+
+    <!-- Add Panel dialog -->
+    <s:String x:Key="Label.Url">URL:</s:String>
+    <s:String x:Key="Label.Width">Width:</s:String>
+    <s:String x:Key="Label.Session">Session:</s:String>
+    <s:String x:Key="Label.Name">Name:</s:String>
+    <s:String x:Key="Item.NewSession">+ New Session...</s:String>
+    <s:String x:Key="Default.NewSessionName">New Session</s:String>
+
+    <!-- Inject dialog -->
+    <s:String x:Key="Label.JS">JavaScript:</s:String>
+    <s:String x:Key="Label.CSS">CSS:</s:String>
+
+    <!-- Session Manager dialog -->
+    <s:String x:Key="Col.SessionName">Name</s:String>
+
+    <!-- Settings dialog -->
+    <s:String x:Key="Label.Theme">Theme</s:String>
+    <s:String x:Key="Label.Language">Language</s:String>
+    <s:String x:Key="Item.ThemeAuto">Auto</s:String>
+    <s:String x:Key="Item.ThemeLight">Light</s:String>
+    <s:String x:Key="Item.ThemeDark">Dark</s:String>
+    <s:String x:Key="Item.LangJa">日本語</s:String>
+    <s:String x:Key="Item.LangEn">English</s:String>
+
+    <!-- About dialog -->
+    <s:String x:Key="Label.Author">Author:</s:String>
+    <s:String x:Key="Prefix.Version">Version </s:String>
+    <s:String x:Key="Prefix.Commit">Commit: </s:String>
+
+</ResourceDictionary>

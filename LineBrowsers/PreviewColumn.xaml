@@ -1,0 +1,48 @@
+<UserControl x:Class="LineBrowsers.PreviewColumn"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- URL bar -->
+        <Grid Grid.Row="0" Background="{DynamicResource UrlBarBackgroundBrush}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Button Grid.Column="0" Content="←"
+                    x:Name="BackButton"
+                    Click="Back_Click"
+                    Margin="4,2,0,2" Padding="6,2"
+                    IsEnabled="False"
+                    Background="{DynamicResource ButtonBackgroundBrush}"
+                    Foreground="{DynamicResource ButtonForegroundBrush}"/>
+            <TextBox x:Name="UrlBar" Grid.Column="1"
+                     Margin="4,2" VerticalContentAlignment="Center"
+                     KeyDown="UrlBar_KeyDown"
+                     Background="{DynamicResource TextBoxBackgroundBrush}"
+                     Foreground="{DynamicResource TextForegroundBrush}"
+                     BorderThickness="0" FontSize="12"/>
+            <Button Grid.Column="2" Content="Go"
+                    Click="Navigate_Click"
+                    Margin="0,2,2,2" Padding="6,2"
+                    Background="{DynamicResource ButtonBackgroundBrush}"
+                    Foreground="{DynamicResource ButtonForegroundBrush}"/>
+            <Button Grid.Column="3" Content="✕"
+                    Click="Close_Click"
+                    Margin="0,2,4,2" Padding="6,2"
+                    ToolTip="プレビューを閉じる"
+                    Background="{DynamicResource ButtonBackgroundBrush}"
+                    Foreground="{DynamicResource ButtonForegroundBrush}"/>
+        </Grid>
+
+        <!-- WebView2 -->
+        <wv2:WebView2 x:Name="WebView" Grid.Row="1"/>
+    </Grid>
+</UserControl>

@@ -1,0 +1,23 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <SolidColorBrush x:Key="WindowBackgroundBrush"       Color="#1A1A1A"/>
+    <SolidColorBrush x:Key="ToolBarBackgroundBrush"      Color="#2D2D2D"/>
+    <SolidColorBrush x:Key="HeaderBackgroundBrush"       Color="#1E1E1E"/>
+    <SolidColorBrush x:Key="HeaderForegroundBrush"       Color="#CCCCCC"/>
+    <SolidColorBrush x:Key="UrlBarBackgroundBrush"       Color="#252525"/>
+    <SolidColorBrush x:Key="TextBoxBackgroundBrush"      Color="#3C3C3C"/>
+    <SolidColorBrush x:Key="TextBoxBorderBrush"          Color="#555555"/>
+    <SolidColorBrush x:Key="TextForegroundBrush"         Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="MutedForegroundBrush"        Color="#AAAAAA"/>
+    <SolidColorBrush x:Key="ButtonBackgroundBrush"       Color="#3C3C3C"/>
+    <SolidColorBrush x:Key="ButtonForegroundBrush"       Color="#CCCCCC"/>
+    <SolidColorBrush x:Key="ButtonBorderBrush"           Color="#555555"/>
+    <SolidColorBrush x:Key="ButtonHoverBackgroundBrush"  Color="#505050"/>
+    <SolidColorBrush x:Key="ButtonPressedBackgroundBrush" Color="#2A2A2A"/>
+    <SolidColorBrush x:Key="MenuBackgroundBrush"         Color="#2D2D2D"/>
+    <SolidColorBrush x:Key="MenuForegroundBrush"         Color="#CCCCCC"/>
+    <SolidColorBrush x:Key="MenuBorderBrush"             Color="#555555"/>
+    <SolidColorBrush x:Key="MenuHighlightBrush"          Color="#3D5A8A"/>
+    <SolidColorBrush x:Key="SeparatorBrush"              Color="#444444"/>
+    <SolidColorBrush x:Key="ResizeThumbBrush"            Color="#444444"/>
+</ResourceDictionary>

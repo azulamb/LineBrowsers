@@ -1,0 +1,34 @@
+<Window x:Class="LineBrowsers.Dialogs.SettingsDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="{DynamicResource Title.Settings}" SizeToContent="Height" Width="300"
+        WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
+        Background="{DynamicResource WindowBackgroundBrush}">
+    <StackPanel Margin="20">
+        <TextBlock Text="{DynamicResource Label.Theme}" FontSize="12" FontWeight="SemiBold"
+                   Foreground="{DynamicResource TextForegroundBrush}"
+                   Margin="0,0,0,6"/>
+        <ComboBox x:Name="ThemeCombo"
+                  Style="{StaticResource ThemedComboBoxStyle}"
+                  SelectionChanged="ThemeCombo_SelectionChanged"
+                  Margin="0,0,0,16">
+            <ComboBoxItem Content="{DynamicResource Item.ThemeAuto}"/>
+            <ComboBoxItem Content="{DynamicResource Item.ThemeLight}"/>
+            <ComboBoxItem Content="{DynamicResource Item.ThemeDark}"/>
+        </ComboBox>
+
+        <TextBlock Text="{DynamicResource Label.Language}" FontSize="12" FontWeight="SemiBold"
+                   Foreground="{DynamicResource TextForegroundBrush}"
+                   Margin="0,0,0,6"/>
+        <ComboBox x:Name="LangCombo"
+                  Style="{StaticResource ThemedComboBoxStyle}"
+                  SelectionChanged="LangCombo_SelectionChanged"
+                  Margin="0,0,0,20">
+            <ComboBoxItem Content="{DynamicResource Item.LangJa}"/>
+            <ComboBoxItem Content="{DynamicResource Item.LangEn}"/>
+        </ComboBox>
+
+        <Button Content="{DynamicResource Btn.Close}" Width="80" HorizontalAlignment="Right"
+                IsCancel="True" Padding="8,4"/>
+    </StackPanel>
+</Window>
