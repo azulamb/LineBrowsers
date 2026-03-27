@@ -1,5 +1,5 @@
 {
   "tasks": {
-    "check": "deno run --allow-run checker.ts"
+    "publish": "deno run --allow-run --allow-read --allow-write publish.ts"
   }
 }

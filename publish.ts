@@ -1,6 +1,22 @@
-const EXE = "bin/LineBrowsers.exe";
+const PROJECT = "LineBrowsers/LineBrowsers.csproj";
+const OUT_DIR = "bin";
+const EXE = `${OUT_DIR}/LineBrowsers.exe`;
 
-// 1. Get version from exe
+// 1. Publish release build to bin/
+console.log("Publishing release...");
+const build = await new Deno.Command("dotnet", {
+  args: ["publish", PROJECT, "-c", "Release", "-o", OUT_DIR],
+  stdout: "inherit",
+  stderr: "inherit",
+}).output();
+
+if (!build.success) {
+  console.error("Publish failed");
+  Deno.exit(1);
+}
+console.log("Publish succeeded");
+
+// 2. Get version from the built exe
 const ps = await new Deno.Command("powershell", {
   args: [
     "-NoProfile",
@@ -22,7 +38,7 @@ if (!version) {
 }
 console.log(`Version: ${version}`);
 
-// 2. Check if tag v{version} already exists
+// 3. Check if tag v{version} already exists
 const tagList = await new Deno.Command("git", {
   args: ["tag", "-l", `v${version}`],
 }).output();
