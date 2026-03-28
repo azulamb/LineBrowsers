@@ -14,7 +14,7 @@ public partial class AboutDialog : Window
         InitializeComponent();
         var full = Assembly.GetExecutingAssembly()
             .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
-            ?.InformationalVersion ?? "1.0.0";
+            ?.InformationalVersion ?? "-";
         var plusIndex = full.IndexOf('+');
         if (plusIndex >= 0)
         {

@@ -20,6 +20,9 @@ public partial class MainWindow : Window
             new Uri("pack://application:,,,/app.ico"));
         _state = StateManager.Load();
         Loaded += MainWindow_Loaded;
+        SizeChanged += (_, _) => UpdatePreviewBounds();
+        LocationChanged += (_, _) => UpdatePreviewBounds();
+        StateChanged += (_, _) => UpdatePreviewBounds();
     }
 
     private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
@@ -111,29 +114,39 @@ public partial class MainWindow : Window
         HidePreview();
 
         var win = new PreviewWindow(url, env) { Owner = this };
-
-        // Maximized windows have hidden off-screen borders; use WorkArea in that case.
-        // For normal-sized windows use the window's actual position and size directly.
-        if (WindowState == WindowState.Maximized)
-        {
-            var work = SystemParameters.WorkArea;
-            win.Left = work.Left + work.Width / 2;
-            win.Top = work.Top;
-            win.Width = work.Width / 2;
-            win.Height = work.Height;
-        }
-        else
-        {
-            win.Left = Left + ActualWidth / 2;
-            win.Top = Top;
-            win.Width = ActualWidth / 2;
-            win.Height = ActualHeight;
-        }
         win.Closed += (_, _) => _previewWindow = null;
         _previewWindow = win;
+        UpdatePreviewBounds();
         win.Show();
 
         await win.InitializeAsync();
+    }
+
+    private void UpdatePreviewBounds()
+    {
+        if (_previewWindow == null) return;
+
+        double left, top, width, height;
+        if (WindowState == WindowState.Maximized)
+        {
+            var work = SystemParameters.WorkArea;
+            left   = work.Left;
+            top    = work.Top;
+            width  = work.Width;
+            height = work.Height;
+        }
+        else
+        {
+            left   = Left;
+            top    = Top;
+            width  = ActualWidth;
+            height = ActualHeight;
+        }
+
+        _previewWindow.Left   = left + width / 2;
+        _previewWindow.Top    = top;
+        _previewWindow.Width  = width / 2;
+        _previewWindow.Height = height;
     }
 
     private void HidePreview()

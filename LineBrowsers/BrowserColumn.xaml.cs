@@ -131,6 +131,7 @@ public partial class BrowserColumn : UserControl
         }
         entry.Code = newCode;
         try { _jsScriptId = await WebView.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(newCode); } catch { }
+        try { await WebView.CoreWebView2.ExecuteScriptAsync(newCode); } catch { }
         StateChanged?.Invoke();
     }
 
