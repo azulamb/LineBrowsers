@@ -1,6 +1,8 @@
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Interop;
 using LineBrowsers.Dialogs;
 using Microsoft.Web.WebView2.Core;
 
@@ -57,10 +59,28 @@ public partial class MainWindow : Window
         column.CloseRequested += () => RemovePanel(column);
         column.StateChanged += () => { UpdatePanelPositions(); StateManager.Save(_state); };
         column.PreviewRequested += (url, e) => ShowPreview(url, e);
+        column.MoveLeftRequested  += () => MovePanel(column, -1);
+        column.MoveRightRequested += () => MovePanel(column, +1);
         Canvas.SetTop(column, 0);
         PanelHost.Children.Add(column);
         UpdatePanelPositions();
         await column.InitializeAsync();
+    }
+
+    private void MovePanel(BrowserColumn column, int direction)
+    {
+        var index = PanelHost.Children.IndexOf(column);
+        var newIndex = index + direction;
+        if (newIndex < 0 || newIndex >= PanelHost.Children.Count) return;
+
+        PanelHost.Children.Remove(column);
+        PanelHost.Children.Insert(newIndex, column);
+
+        _state.Panels.Remove(column.Config);
+        _state.Panels.Insert(newIndex, column.Config);
+
+        UpdatePanelPositions();
+        StateManager.Save(_state);
     }
 
     private void RemovePanel(BrowserColumn column)
@@ -129,11 +149,15 @@ public partial class MainWindow : Window
         double left, top, width, height;
         if (WindowState == WindowState.Maximized)
         {
-            var work = SystemParameters.WorkArea;
-            left   = work.Left;
-            top    = work.Top;
-            width  = work.Width;
-            height = work.Height;
+            // Get the work area of the monitor this window is currently on.
+            var hwnd = new WindowInteropHelper(this).Handle;
+            var hMon = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+            var mi = new MONITORINFO { cbSize = Marshal.SizeOf<MONITORINFO>() };
+            GetMonitorInfo(hMon, ref mi);
+            left   = mi.rcWork.Left;
+            top    = mi.rcWork.Top;
+            width  = mi.rcWork.Right  - mi.rcWork.Left;
+            height = mi.rcWork.Bottom - mi.rcWork.Top;
         }
         else
         {
@@ -148,6 +172,28 @@ public partial class MainWindow : Window
         _previewWindow.Width  = width / 2;
         _previewWindow.Height = height;
     }
+
+    // Win32 helpers for monitor detection
+    private const uint MONITOR_DEFAULTTONEAREST = 2;
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct RECT { public int Left, Top, Right, Bottom; }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct MONITORINFO
+    {
+        public int cbSize;
+        public RECT rcMonitor;
+        public RECT rcWork;
+        public uint dwFlags;
+    }
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr MonitorFromWindow(IntPtr hwnd, uint dwFlags);
+
+    [DllImport("user32.dll")]
+    private static extern bool GetMonitorInfo(IntPtr hMonitor, ref MONITORINFO lpmi);
+
 
     private void HidePreview()
     {

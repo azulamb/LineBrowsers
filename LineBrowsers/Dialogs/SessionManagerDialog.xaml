@@ -13,8 +13,15 @@
         <ListView x:Name="SessionList" Grid.Row="0">
             <ListView.View>
                 <GridView>
-                    <GridViewColumn Header="{DynamicResource Col.SessionName}" Width="260"
-                                    DisplayMemberBinding="{Binding Name}"/>
+                    <GridViewColumn Header="{DynamicResource Col.SessionName}" Width="260">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBox Text="{Binding Name, UpdateSourceTrigger=LostFocus}"
+                                         Background="Transparent" BorderThickness="0"
+                                         Foreground="{DynamicResource TextForegroundBrush}"/>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
                     <GridViewColumn Width="90">
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>

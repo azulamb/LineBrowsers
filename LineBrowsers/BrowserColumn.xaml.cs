@@ -14,12 +14,19 @@ public partial class BrowserColumn : UserControl
     public event Action? CloseRequested;
     public event Action? StateChanged;
     public event Action<string, CoreWebView2Environment>? PreviewRequested;
+    public event Action? MoveLeftRequested;
+    public event Action? MoveRightRequested;
 
     private readonly CoreWebView2Environment _env;
     private readonly SessionConfig _session;
     private bool _middleClickPending;
     private string? _jsScriptId;
     private string? _cssScriptId;
+    private const string MobileUserAgent =
+        "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36";
+
+    private const string MobileMetricsJson =
+        """{"width":0,"height":0,"deviceScaleFactor":0,"mobile":true}""";
 
     public BrowserColumn(PanelConfig config, SessionConfig session, CoreWebView2Environment env)
     {
@@ -88,6 +95,19 @@ public partial class BrowserColumn : UserControl
             PreviewRequested?.Invoke(args.Uri, _env);
         };
 
+
+        if (Config.IsMobile)
+        {
+            try
+            {
+                await WebView.CoreWebView2.CallDevToolsProtocolMethodAsync(
+                    "Emulation.setDeviceMetricsOverride", MobileMetricsJson);
+                await WebView.CoreWebView2.CallDevToolsProtocolMethodAsync(
+                    "Emulation.setUserAgentOverride",
+                    $$$"""{"userAgent":"{{{MobileUserAgent}}}"}""");
+            }
+            catch { }
+        }
 
         // Re-register saved injections
         var js = Config.OnLoadScripts.FirstOrDefault();
@@ -218,16 +238,60 @@ public partial class BrowserColumn : UserControl
         var injectCss = new MenuItem { Header = LocaleManager.Get("Menu.InjectCss") };
         injectCss.Click += async (_, _) => { try { await ShowInjectDialog(isCss: true); } catch { } };
 
+        var mobileMode = new MenuItem
+        {
+            Header = LocaleManager.Get("Menu.MobileMode"),
+            IsCheckable = true,
+            IsChecked = Config.IsMobile,
+        };
+        mobileMode.Click += (_, _) => ToggleMobileMode();
+
+        var moveLeft = new MenuItem { Header = LocaleManager.Get("Menu.MoveLeft") };
+        moveLeft.Click += (_, _) => MoveLeftRequested?.Invoke();
+
+        var moveRight = new MenuItem { Header = LocaleManager.Get("Menu.MoveRight") };
+        moveRight.Click += (_, _) => MoveRightRequested?.Invoke();
+
         var close = new MenuItem { Header = LocaleManager.Get("Menu.ClosePanel") };
         close.Click += (_, _) => CloseRequested?.Invoke();
 
         menu.Items.Add(panelSettings);
+        menu.Items.Add(mobileMode);
+        menu.Items.Add(new Separator());
+        menu.Items.Add(moveLeft);
+        menu.Items.Add(moveRight);
         menu.Items.Add(new Separator());
         menu.Items.Add(injectJs);
         menu.Items.Add(injectCss);
         menu.Items.Add(new Separator());
         menu.Items.Add(close);
         menu.IsOpen = true;
+    }
+
+    private async void ToggleMobileMode()
+    {
+        Config.IsMobile = !Config.IsMobile;
+        try
+        {
+            if (Config.IsMobile)
+            {
+                await WebView.CoreWebView2.CallDevToolsProtocolMethodAsync(
+                    "Emulation.setDeviceMetricsOverride", MobileMetricsJson);
+                await WebView.CoreWebView2.CallDevToolsProtocolMethodAsync(
+                    "Emulation.setUserAgentOverride",
+                    $$$"""{"userAgent":"{{{MobileUserAgent}}}"}""");
+            }
+            else
+            {
+                await WebView.CoreWebView2.CallDevToolsProtocolMethodAsync(
+                    "Emulation.clearDeviceMetricsOverride", "{}");
+                await WebView.CoreWebView2.CallDevToolsProtocolMethodAsync(
+                    "Emulation.setUserAgentOverride", """{"userAgent":""}""");
+            }
+        }
+        catch { }
+        WebView.CoreWebView2.Reload();
+        StateChanged?.Invoke();
     }
 
     private void ShowPanelSettings()

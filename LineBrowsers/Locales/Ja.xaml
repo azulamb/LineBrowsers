@@ -31,6 +31,9 @@
     <!-- BrowserColumn -->
     <s:String x:Key="Tooltip.InjectMenu">JS / CSS を注入</s:String>
     <s:String x:Key="Menu.PanelSettings">パネルの設定...</s:String>
+    <s:String x:Key="Menu.MobileMode">スマートフォンモード</s:String>
+    <s:String x:Key="Menu.MoveLeft">左に移動</s:String>
+    <s:String x:Key="Menu.MoveRight">右に移動</s:String>
     <s:String x:Key="Menu.InjectJs">JavaScript を注入...</s:String>
     <s:String x:Key="Menu.InjectCss">CSS を注入...</s:String>
     <s:String x:Key="Menu.ClosePanel">このパネルを閉じる</s:String>

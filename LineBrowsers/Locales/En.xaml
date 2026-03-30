@@ -31,6 +31,9 @@
     <!-- BrowserColumn -->
     <s:String x:Key="Tooltip.InjectMenu">Inject JS / CSS</s:String>
     <s:String x:Key="Menu.PanelSettings">Panel Settings...</s:String>
+    <s:String x:Key="Menu.MobileMode">Smartphone Mode</s:String>
+    <s:String x:Key="Menu.MoveLeft">Move Left</s:String>
+    <s:String x:Key="Menu.MoveRight">Move Right</s:String>
     <s:String x:Key="Menu.InjectJs">Inject JavaScript...</s:String>
     <s:String x:Key="Menu.InjectCss">Inject CSS...</s:String>
     <s:String x:Key="Menu.ClosePanel">Close this panel</s:String>

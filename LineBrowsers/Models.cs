@@ -54,6 +54,7 @@ public class PanelConfig
     public double Width { get; set; } = 400;
     public List<InjectionEntry> OnLoadScripts { get; set; } = new();
     public List<InjectionEntry> OnLoadStyles { get; set; } = new();
+    public bool IsMobile { get; set; } = false;
 }
 
 public class AppState
