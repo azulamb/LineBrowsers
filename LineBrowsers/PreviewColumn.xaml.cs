@@ -65,7 +65,7 @@ public partial class PreviewColumn : UserControl
         WebView.Source = new Uri(_initialUrl);
     }
 
-    public new void Dispose() => WebView.Dispose();
+    public void Dispose() => WebView.Dispose();
 
     private void Back_Click(object sender, RoutedEventArgs e) => WebView.CoreWebView2.GoBack();
 

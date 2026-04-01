@@ -60,6 +60,9 @@
     <!-- Session Manager dialog -->
     <s:String x:Key="Col.SessionName">名前</s:String>
 
+    <!-- Private mode -->
+    <s:String x:Key="Label.PrivateMode">プライベートモード</s:String>
+
     <!-- Settings dialog -->
     <s:String x:Key="Label.Theme">テーマ</s:String>
     <s:String x:Key="Label.Language">言語</s:String>

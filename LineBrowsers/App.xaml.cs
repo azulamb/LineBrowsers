@@ -1,3 +1,4 @@
+using System.Threading;
 using System.Windows;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Win32;
@@ -6,6 +7,8 @@ namespace LineBrowsers;
 
 public partial class App : Application
 {
+    private Mutex? _singleInstanceMutex;
+
     protected override void OnStartup(StartupEventArgs e)
     {
         try
@@ -30,6 +33,25 @@ public partial class App : Application
                 args.Handled = true;
         };
 
+#if DEBUG
+        StateManager.EnablePrivateMode();
+#else
+        if (e.Args.Contains("--private"))
+            StateManager.EnablePrivateMode();
+#endif
+
+        if (!StateManager.IsPrivate)
+        {
+            _singleInstanceMutex = new Mutex(initiallyOwned: true, "LineBrowsers_SingleInstance", out var createdNew);
+            if (!createdNew)
+            {
+                _singleInstanceMutex.Dispose();
+                _singleInstanceMutex = null;
+                Shutdown(0);
+                return;
+            }
+        }
+
         // Apply saved theme and locale before the window is created
         var state = StateManager.Load();
         ThemeManager.Apply(state.Theme);
@@ -44,6 +66,9 @@ public partial class App : Application
     protected override void OnExit(ExitEventArgs e)
     {
         SystemEvents.UserPreferenceChanged -= OnUserPreferenceChanged;
+        StateManager.CleanupPrivateTemp();
+        _singleInstanceMutex?.ReleaseMutex();
+        _singleInstanceMutex?.Dispose();
         base.OnExit(e);
     }
 

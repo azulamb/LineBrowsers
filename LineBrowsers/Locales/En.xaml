@@ -60,6 +60,9 @@
     <!-- Session Manager dialog -->
     <s:String x:Key="Col.SessionName">Name</s:String>
 
+    <!-- Private mode -->
+    <s:String x:Key="Label.PrivateMode">Private Mode</s:String>
+
     <!-- Settings dialog -->
     <s:String x:Key="Label.Theme">Theme</s:String>
     <s:String x:Key="Label.Language">Language</s:String>

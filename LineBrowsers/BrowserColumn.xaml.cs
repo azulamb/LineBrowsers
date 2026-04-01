@@ -20,6 +20,7 @@ public partial class BrowserColumn : UserControl
     private readonly CoreWebView2Environment _env;
     private readonly SessionConfig _session;
     private bool _middleClickPending;
+    private bool _shiftClickPending;
     private string? _jsScriptId;
     private string? _cssScriptId;
     private const string MobileUserAgent =
@@ -46,11 +47,12 @@ public partial class BrowserColumn : UserControl
         // Track middle-click via JS message so NewWindowRequested can distinguish it
         WebView.CoreWebView2.WebMessageReceived += (_, args) =>
         {
-            if (args.TryGetWebMessageAsString() == "__middleclick__")
-                _middleClickPending = true;
+            var msg = args.TryGetWebMessageAsString();
+            if (msg == "__middleclick__") _middleClickPending = true;
+            if (msg == "__shiftclick__")  _shiftClickPending  = true;
         };
         await WebView.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(
-            "document.addEventListener('mousedown',function(e){if(e.button===1)window.chrome.webview.postMessage('__middleclick__');},true);");
+            "document.addEventListener('mousedown',function(e){if(e.button===1)window.chrome.webview.postMessage('__middleclick__');if(e.button===0&&e.shiftKey)window.chrome.webview.postMessage('__shiftclick__');},true);");
 
         // SourceChanged fires on every URL update including History API (pushState/replaceState)
         WebView.CoreWebView2.SourceChanged += (_, _) =>
@@ -65,10 +67,11 @@ public partial class BrowserColumn : UserControl
             StateChanged?.Invoke();
         };
 
-        // NewWindowRequested: middle-click → default browser, left-click → preview
+        // NewWindowRequested: middle-click → default browser, others → preview
         WebView.CoreWebView2.NewWindowRequested += (_, args) =>
         {
             args.Handled = true;
+            _shiftClickPending = false;
             if (_middleClickPending)
             {
                 _middleClickPending = false;
@@ -83,10 +86,17 @@ public partial class BrowserColumn : UserControl
             }
         };
 
-        // Cross-domain user navigation → show in preview panel
+        // Shift+click → preview; cross-domain user navigation → preview
         WebView.CoreWebView2.NavigationStarting += (_, args) =>
         {
             if (!args.IsUserInitiated) return;
+            if (_shiftClickPending)
+            {
+                _shiftClickPending = false;
+                args.Cancel = true;
+                PreviewRequested?.Invoke(args.Uri, _env);
+                return;
+            }
             if (!Uri.TryCreate(args.Uri, UriKind.Absolute, out var newUri)) return;
             if (!Uri.TryCreate(WebView.CoreWebView2.Source, UriKind.Absolute, out var currentUri)) return;
             if (string.IsNullOrEmpty(currentUri.Host)) return;
@@ -191,7 +201,7 @@ public partial class BrowserColumn : UserControl
         StateChanged?.Invoke();
     }
 
-    public new void Dispose() => WebView.Dispose();
+    public void Dispose() => WebView.Dispose();
 
     // Wraps raw CSS in a JS snippet that injects a <style> tag.
     // Uses readyState check so it works both when called via

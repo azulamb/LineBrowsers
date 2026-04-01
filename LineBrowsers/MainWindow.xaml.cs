@@ -21,6 +21,8 @@ public partial class MainWindow : Window
         Icon = new System.Windows.Media.Imaging.BitmapImage(
             new Uri("pack://application:,,,/app.ico"));
         _state = StateManager.Load();
+        if (StateManager.IsPrivate)
+            Title = "LineBrowsers — " + LocaleManager.Get("Label.PrivateMode");
         Loaded += MainWindow_Loaded;
         SizeChanged += (_, _) => UpdatePreviewBounds();
         LocationChanged += (_, _) => UpdatePreviewBounds();
@@ -43,9 +45,11 @@ public partial class MainWindow : Window
             return existing;
 
         if (string.IsNullOrEmpty(session.ProfilePath))
-            session.ProfilePath = System.IO.Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "LineBrowsers", "Profiles", session.SessionId);
+            session.ProfilePath = StateManager.IsPrivate
+                ? System.IO.Path.Combine(StateManager.PrivateTempRoot!, session.SessionId)
+                : System.IO.Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                    "LineBrowsers", "Profiles", session.SessionId);
 
         var env = await CoreWebView2Environment.CreateAsync(null, session.ProfilePath);
         _environments[session.SessionId] = env;
