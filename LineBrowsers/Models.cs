@@ -55,6 +55,7 @@ public class PanelConfig
     public List<InjectionEntry> OnLoadScripts { get; set; } = new();
     public List<InjectionEntry> OnLoadStyles { get; set; } = new();
     public bool IsMobile { get; set; } = false;
+    public bool EnablePreview { get; set; } = true;
 }
 
 public class AppState

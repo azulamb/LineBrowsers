@@ -41,8 +41,11 @@
     <!-- Panel Settings dialog -->
     <s:String x:Key="Title.PanelSettings">パネルの設定</s:String>
     <s:String x:Key="Btn.GetCurrentUrl">現在のURLを取得</s:String>
+    <s:String x:Key="Label.EnablePreview">プレビューを有効にする</s:String>
 
     <!-- Preview window -->
+    <s:String x:Key="Btn.OpenBrowser">ブラウザ</s:String>
+    <s:String x:Key="Tooltip.OpenBrowser">既定のブラウザで開く</s:String>
     <s:String x:Key="Tooltip.ClosePreview">プレビューを閉じる</s:String>
 
     <!-- Add Panel dialog -->

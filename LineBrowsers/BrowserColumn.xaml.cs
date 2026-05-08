@@ -21,6 +21,7 @@ public partial class BrowserColumn : UserControl
     private readonly SessionConfig _session;
     private bool _middleClickPending;
     private bool _shiftClickPending;
+    private bool _leftClickPending;
     private string? _jsScriptId;
     private string? _cssScriptId;
     private const string MobileUserAgent =
@@ -50,9 +51,21 @@ public partial class BrowserColumn : UserControl
             var msg = args.TryGetWebMessageAsString();
             if (msg == "__middleclick__") _middleClickPending = true;
             if (msg == "__shiftclick__")  _shiftClickPending  = true;
+            if (msg == "__leftclick__")   _leftClickPending   = true;
         };
         await WebView.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(
-            "document.addEventListener('mousedown',function(e){if(e.button===1)window.chrome.webview.postMessage('__middleclick__');if(e.button===0&&e.shiftKey)window.chrome.webview.postMessage('__shiftclick__');},true);");
+            "document.addEventListener('mousedown',function(e){if(!window.chrome||!window.chrome.webview)return;if(e.button===1)window.chrome.webview.postMessage('__middleclick__');if(e.button===0&&e.shiftKey)window.chrome.webview.postMessage('__shiftclick__');else if(e.button===0)window.chrome.webview.postMessage('__leftclick__');},true);");
+
+#if DEBUG
+        WebView.CoreWebView2.ProcessFailed += (_, args) =>
+            System.Diagnostics.Debug.WriteLine(
+                $"[WebView2] ProcessFailed: {args.ProcessFailedKind} / ExitCode={args.ExitCode} / Reason={args.Reason}");
+
+        await WebView.CoreWebView2.CallDevToolsProtocolMethodAsync("Log.enable", "{}");
+        var logReceiver = WebView.CoreWebView2.GetDevToolsProtocolEventReceiver("Log.entryAdded");
+        logReceiver.DevToolsProtocolEventReceived += (_, args) =>
+            System.Diagnostics.Debug.WriteLine($"[WebView2:Log] {args.ParameterObjectAsJson}");
+#endif
 
         // SourceChanged fires on every URL update including History API (pushState/replaceState)
         WebView.CoreWebView2.SourceChanged += (_, _) =>
@@ -67,36 +80,68 @@ public partial class BrowserColumn : UserControl
             StateChanged?.Invoke();
         };
 
-        // NewWindowRequested: middle-click → default browser, others → preview
-        WebView.CoreWebView2.NewWindowRequested += (_, args) =>
+        // NewWindowRequested:
+        //   middle-click       → default browser
+        //   left-click (link)  → preview or same WebView
+        //   no click (JS open) → popup with window.opener (OAuth etc.)
+        WebView.CoreWebView2.NewWindowRequested += async (_, args) =>
         {
-            args.Handled = true;
             _shiftClickPending = false;
             if (_middleClickPending)
             {
+                args.Handled = true;
                 _middleClickPending = false;
+                _leftClickPending = false;
                 System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(args.Uri)
                 {
                     UseShellExecute = true
                 });
+                return;
             }
-            else
+
+            if (_leftClickPending)
             {
-                PreviewRequested?.Invoke(args.Uri, _env);
+                args.Handled = true;
+                _leftClickPending = false;
+                if (Config.EnablePreview)
+                    PreviewRequested?.Invoke(args.Uri, _env);
+                else
+                    WebView.Source = new Uri(args.Uri);
+                return;
+            }
+
+            // Programmatic window.open() — needs window.opener (e.g. OAuth popup)
+            var deferral = args.GetDeferral();
+            try
+            {
+                var owner = System.Windows.Window.GetWindow(this);
+                var popup = new PopupWindow(_env, owner);
+                popup.Show();
+                await popup.InitializeCoreWebView2Async();
+                args.NewWindow = popup.WebView.CoreWebView2;
+                args.Handled = true;
+            }
+            finally
+            {
+                deferral.Complete();
             }
         };
 
-        // Shift+click → preview; cross-domain user navigation → preview
+        // Shift+click → preview or same WebView; cross-domain user navigation → preview or same WebView
         WebView.CoreWebView2.NavigationStarting += (_, args) =>
         {
             if (!args.IsUserInitiated) return;
             if (_shiftClickPending)
             {
                 _shiftClickPending = false;
-                args.Cancel = true;
-                PreviewRequested?.Invoke(args.Uri, _env);
+                if (Config.EnablePreview)
+                {
+                    args.Cancel = true;
+                    PreviewRequested?.Invoke(args.Uri, _env);
+                }
                 return;
             }
+            if (!Config.EnablePreview) return;
             if (!Uri.TryCreate(args.Uri, UriKind.Absolute, out var newUri)) return;
             if (!Uri.TryCreate(WebView.CoreWebView2.Source, UriKind.Absolute, out var currentUri)) return;
             if (string.IsNullOrEmpty(currentUri.Host)) return;
@@ -217,7 +262,10 @@ public partial class BrowserColumn : UserControl
 
     private void Navigate_Click(object sender, RoutedEventArgs e)
     {
-        if (Uri.TryCreate(UrlBar.Text, UriKind.Absolute, out var uri))
+        if (!Uri.TryCreate(UrlBar.Text, UriKind.Absolute, out var uri)) return;
+        if (WebView.CoreWebView2 != null && WebView.Source == uri)
+            WebView.CoreWebView2.Reload();
+        else
             WebView.Source = uri;
     }
 
@@ -248,14 +296,6 @@ public partial class BrowserColumn : UserControl
         var injectCss = new MenuItem { Header = LocaleManager.Get("Menu.InjectCss") };
         injectCss.Click += async (_, _) => { try { await ShowInjectDialog(isCss: true); } catch { } };
 
-        var mobileMode = new MenuItem
-        {
-            Header = LocaleManager.Get("Menu.MobileMode"),
-            IsCheckable = true,
-            IsChecked = Config.IsMobile,
-        };
-        mobileMode.Click += (_, _) => ToggleMobileMode();
-
         var moveLeft = new MenuItem { Header = LocaleManager.Get("Menu.MoveLeft") };
         moveLeft.Click += (_, _) => MoveLeftRequested?.Invoke();
 
@@ -266,7 +306,6 @@ public partial class BrowserColumn : UserControl
         close.Click += (_, _) => CloseRequested?.Invoke();
 
         menu.Items.Add(panelSettings);
-        menu.Items.Add(mobileMode);
         menu.Items.Add(new Separator());
         menu.Items.Add(moveLeft);
         menu.Items.Add(moveRight);
@@ -278,7 +317,7 @@ public partial class BrowserColumn : UserControl
         menu.IsOpen = true;
     }
 
-    private async void ToggleMobileMode()
+    private async Task ToggleMobileModeAsync()
     {
         Config.IsMobile = !Config.IsMobile;
         try
@@ -304,22 +343,25 @@ public partial class BrowserColumn : UserControl
         StateChanged?.Invoke();
     }
 
-    private void ShowPanelSettings()
+    private async void ShowPanelSettings()
     {
         var currentUrl = WebView.Source?.ToString() ?? Config.Url;
-        var dialog = new Dialogs.PanelSettingsDialog(Config.Url, Config.Width, currentUrl)
+        var dialog = new Dialogs.PanelSettingsDialog(Config.Url, Config.Width, currentUrl, Config.EnablePreview, Config.IsMobile)
         {
             Owner = Window.GetWindow(this)
         };
         if (dialog.ShowDialog() != true) return;
 
         Config.Url = dialog.InitialUrl;
+        Config.EnablePreview = dialog.EnablePreview;
         var newWidth = dialog.PanelWidth;
         if (Math.Abs(Config.Width - newWidth) > 0.5)
         {
             Config.Width = newWidth;
             Width = newWidth;
         }
+        if (dialog.IsMobile != Config.IsMobile)
+            await ToggleMobileModeAsync();
         StateChanged?.Invoke();
     }
 

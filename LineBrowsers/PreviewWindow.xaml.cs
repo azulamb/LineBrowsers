@@ -10,6 +10,7 @@ public partial class PreviewWindow : Window
     private readonly string _initialUrl;
     private readonly CoreWebView2Environment _env;
     private bool _middleClickPending;
+    private bool _leftClickPending;
 
     public PreviewWindow(string url, CoreWebView2Environment env)
     {
@@ -25,11 +26,12 @@ public partial class PreviewWindow : Window
 
         WebView.CoreWebView2.WebMessageReceived += (_, args) =>
         {
-            if (args.TryGetWebMessageAsString() == "__middleclick__")
-                _middleClickPending = true;
+            var msg = args.TryGetWebMessageAsString();
+            if (msg == "__middleclick__") _middleClickPending = true;
+            if (msg == "__leftclick__")   _leftClickPending   = true;
         };
         await WebView.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(
-            "document.addEventListener('mousedown',function(e){if(e.button===1)window.chrome.webview.postMessage('__middleclick__');},true);");
+            "document.addEventListener('mousedown',function(e){if(!window.chrome||!window.chrome.webview)return;if(e.button===1)window.chrome.webview.postMessage('__middleclick__');else if(e.button===0)window.chrome.webview.postMessage('__leftclick__');},true);");
 
         WebView.CoreWebView2.SourceChanged += (_, _) =>
         {
@@ -41,20 +43,41 @@ public partial class PreviewWindow : Window
             BackButton.IsEnabled = WebView.CoreWebView2.CanGoBack;
         };
 
-        WebView.CoreWebView2.NewWindowRequested += (_, args) =>
+        WebView.CoreWebView2.NewWindowRequested += async (_, args) =>
         {
-            args.Handled = true;
             if (_middleClickPending)
             {
+                args.Handled = true;
                 _middleClickPending = false;
+                _leftClickPending = false;
                 System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(args.Uri)
                 {
                     UseShellExecute = true
                 });
+                return;
             }
-            else
+
+            if (_leftClickPending)
             {
+                args.Handled = true;
+                _leftClickPending = false;
                 WebView.Source = new Uri(args.Uri);
+                return;
+            }
+
+            // Programmatic window.open() — needs window.opener (e.g. OAuth popup)
+            var deferral = args.GetDeferral();
+            try
+            {
+                var popup = new PopupWindow(_env, this);
+                popup.Show();
+                await popup.InitializeCoreWebView2Async();
+                args.NewWindow = popup.WebView.CoreWebView2;
+                args.Handled = true;
+            }
+            finally
+            {
+                deferral.Complete();
             }
         };
 
@@ -65,13 +88,22 @@ public partial class PreviewWindow : Window
 
     private void Navigate_Click(object sender, RoutedEventArgs e)
     {
-        if (Uri.TryCreate(UrlBar.Text, UriKind.Absolute, out var uri))
+        if (!Uri.TryCreate(UrlBar.Text, UriKind.Absolute, out var uri)) return;
+        if (WebView.CoreWebView2 != null && WebView.Source == uri)
+            WebView.CoreWebView2.Reload();
+        else
             WebView.Source = uri;
     }
 
     private void UrlBar_KeyDown(object sender, KeyEventArgs e)
     {
         if (e.Key == Key.Enter) Navigate_Click(sender, e);
+    }
+
+    private void OpenBrowser_Click(object sender, RoutedEventArgs e)
+    {
+        var url = WebView.CoreWebView2?.Source ?? _initialUrl;
+        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true });
     }
 
     private void Close_Click(object sender, RoutedEventArgs e) => Close();

@@ -8,13 +8,17 @@ public partial class PanelSettingsDialog : Window
 
     public string InitialUrl => UrlBox.Text;
     public double PanelWidth => double.TryParse(WidthBox.Text, out var w) && w >= 100 ? w : 400;
+    public bool EnablePreview => EnablePreviewCheck.IsChecked == true;
+    public bool IsMobile => MobileModeCheck.IsChecked == true;
 
-    public PanelSettingsDialog(string initialUrl, double width, string currentUrl)
+    public PanelSettingsDialog(string initialUrl, double width, string currentUrl, bool enablePreview, bool isMobile)
     {
         InitializeComponent();
         _currentUrl = currentUrl;
         UrlBox.Text = initialUrl;
         WidthBox.Text = ((int)width).ToString();
+        EnablePreviewCheck.IsChecked = enablePreview;
+        MobileModeCheck.IsChecked = isMobile;
     }
 
     private void GetCurrentUrl_Click(object sender, RoutedEventArgs e)

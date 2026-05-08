@@ -15,6 +15,7 @@
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <Button Grid.Column="0" Content="←"
                     x:Name="BackButton"
@@ -34,7 +35,13 @@
                     Margin="0,2,2,2" Padding="6,2"
                     Background="{DynamicResource ButtonBackgroundBrush}"
                     Foreground="{DynamicResource ButtonForegroundBrush}"/>
-            <Button Grid.Column="3" Content="✕"
+            <Button Grid.Column="3" Content="{DynamicResource Btn.OpenBrowser}"
+                    Click="OpenBrowser_Click"
+                    Margin="0,2,2,2" Padding="6,2"
+                    ToolTip="{DynamicResource Tooltip.OpenBrowser}"
+                    Background="{DynamicResource ButtonBackgroundBrush}"
+                    Foreground="{DynamicResource ButtonForegroundBrush}"/>
+            <Button Grid.Column="4" Content="✕"
                     Click="Close_Click"
                     Margin="0,2,4,2" Padding="6,2"
                     ToolTip="プレビューを閉じる"

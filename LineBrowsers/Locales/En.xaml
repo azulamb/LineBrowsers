@@ -41,8 +41,11 @@
     <!-- Panel Settings dialog -->
     <s:String x:Key="Title.PanelSettings">Panel Settings</s:String>
     <s:String x:Key="Btn.GetCurrentUrl">Get current URL</s:String>
+    <s:String x:Key="Label.EnablePreview">Enable preview</s:String>
 
     <!-- Preview window -->
+    <s:String x:Key="Btn.OpenBrowser">Browser</s:String>
+    <s:String x:Key="Tooltip.OpenBrowser">Open in default browser</s:String>
     <s:String x:Key="Tooltip.ClosePreview">Close preview</s:String>
 
     <!-- Add Panel dialog -->
