@@ -1,3 +1,8 @@
+/*
+Edit version:
+LineBrowsers\LineBrowsers.csproj
+
+ */
 const PROJECT = "LineBrowsers/LineBrowsers.csproj";
 const OUT_DIR = "bin";
 const EXE = `${OUT_DIR}/LineBrowsers.exe`;

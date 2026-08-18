@@ -22,6 +22,7 @@ public partial class BrowserColumn : UserControl
     private bool _middleClickPending;
     private bool _shiftClickPending;
     private bool _leftClickPending;
+    private bool _restarting;
     private string? _jsScriptId;
     private string? _cssScriptId;
     private const string MobileUserAgent =
@@ -40,7 +41,7 @@ public partial class BrowserColumn : UserControl
         UrlBar.Text = config.Url;
     }
 
-    public async Task InitializeAsync()
+    public async Task InitializeAsync(string? startUrl = null)
     {
         // Must be in the visual tree before calling EnsureCoreWebView2Async
         await WebView.EnsureCoreWebView2Async(_env);
@@ -54,7 +55,7 @@ public partial class BrowserColumn : UserControl
             if (msg == "__leftclick__")   _leftClickPending   = true;
         };
         await WebView.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(
-            "document.addEventListener('mousedown',function(e){if(!window.chrome||!window.chrome.webview)return;if(e.button===1)window.chrome.webview.postMessage('__middleclick__');if(e.button===0&&e.shiftKey)window.chrome.webview.postMessage('__shiftclick__');else if(e.button===0)window.chrome.webview.postMessage('__leftclick__');},true);");
+            "(function(){var wv=window.chrome&&window.chrome.webview;if(wv){try{Object.defineProperty(window.chrome,'webview',{get:function(){return undefined;},configurable:true});}catch(e){window.chrome.webview=null;}}document.addEventListener('mousedown',function(e){if(!wv)return;if(e.button===1)wv.postMessage('__middleclick__');if(e.button===0&&e.shiftKey)wv.postMessage('__shiftclick__');else if(e.button===0)wv.postMessage('__leftclick__');},true);})();");
 
 #if DEBUG
         WebView.CoreWebView2.ProcessFailed += (_, args) =>
@@ -173,7 +174,51 @@ public partial class BrowserColumn : UserControl
         if (css != null && !string.IsNullOrWhiteSpace(css.Code))
             try { _cssScriptId = await WebView.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(WrapCss(css.Code)); } catch { }
 
-        WebView.Source = new Uri(Config.Url);
+        WebView.Source = Uri.TryCreate(startUrl, UriKind.Absolute, out var start)
+            ? start
+            : new Uri(Config.Url);
+    }
+
+    // Disposes the WebView2 control and builds a fresh one in its place,
+    // then re-runs the whole initialization on the current URL.
+    // Recovers a hung / blank panel without restarting the app.
+    public async Task RestartWebViewAsync()
+    {
+        if (_restarting) return;
+        _restarting = true;
+        try
+        {
+            var currentUrl = WebView.CoreWebView2?.Source ?? WebView.Source?.ToString();
+            if (string.IsNullOrWhiteSpace(currentUrl) || currentUrl == "about:blank")
+                currentUrl = Config.Url;
+
+            var old = WebView;
+            var host = (Grid)old.Parent;
+            var index = host.Children.IndexOf(old);
+            var row = Grid.GetRow(old);
+            host.Children.Remove(old);
+            old.Dispose();
+
+            var fresh = new Microsoft.Web.WebView2.Wpf.WebView2();
+            Grid.SetRow(fresh, row);
+            host.Children.Insert(index, fresh);
+            WebView = fresh;
+
+            _jsScriptId = null;
+            _cssScriptId = null;
+            _middleClickPending = false;
+            _shiftClickPending = false;
+            _leftClickPending = false;
+            BackButton.IsEnabled = false;
+
+            // Force the new control through Loaded before EnsureCoreWebView2Async
+            host.UpdateLayout();
+            await InitializeAsync(currentUrl);
+        }
+        finally
+        {
+            _restarting = false;
+        }
     }
 
     public async Task InjectScriptAsync(string script)
@@ -290,6 +335,9 @@ public partial class BrowserColumn : UserControl
         var panelSettings = new MenuItem { Header = LocaleManager.Get("Menu.PanelSettings") };
         panelSettings.Click += (_, _) => ShowPanelSettings();
 
+        var restart = new MenuItem { Header = LocaleManager.Get("Menu.RestartWebView") };
+        restart.Click += async (_, _) => { try { await RestartWebViewAsync(); } catch { } };
+
         var injectJs = new MenuItem { Header = LocaleManager.Get("Menu.InjectJs") };
         injectJs.Click += async (_, _) => { try { await ShowInjectDialog(isCss: false); } catch { } };
 
@@ -306,6 +354,7 @@ public partial class BrowserColumn : UserControl
         close.Click += (_, _) => CloseRequested?.Invoke();
 
         menu.Items.Add(panelSettings);
+        menu.Items.Add(restart);
         menu.Items.Add(new Separator());
         menu.Items.Add(moveLeft);
         menu.Items.Add(moveRight);

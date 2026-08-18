@@ -1,6 +1,8 @@
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Interop;
 using Microsoft.Web.WebView2.Core;
 
 namespace LineBrowsers;
@@ -19,6 +21,70 @@ public partial class PreviewWindow : Window
         InitializeComponent();
         UrlBar.Text = url;
     }
+
+    // ------------------------------------------------------------- window bounds
+
+    // The owner drives our position/size in physical pixels. Going through
+    // SetWindowPos instead of Left/Top/Width/Height avoids WPF converting the
+    // values with a DPI that is not yet settled: before Show() the window has no
+    // HWND (and therefore no monitor DPI), and a window created off the target
+    // monitor is rescaled by the DPI ratio when it is moved onto it — which is
+    // what made the preview mis-sized on a 175% display until the first resize.
+    private (int X, int Y, int Cx, int Cy)? _deviceBounds;
+    private bool _applyingBounds;
+
+    public void SetDeviceBounds(int x, int y, int cx, int cy, DpiScale ownerDpi)
+    {
+        _deviceBounds = (x, y, cx, cy);
+
+        var hwnd = new WindowInteropHelper(this).Handle;
+        if (hwnd == IntPtr.Zero)
+        {
+            // No HWND yet: place it in DIPs so the window is *created* on the
+            // target monitor. OnSourceInitialized then applies the exact rect.
+            Left   = x  / ownerDpi.DpiScaleX;
+            Top    = y  / ownerDpi.DpiScaleY;
+            Width  = cx / ownerDpi.DpiScaleX;
+            Height = cy / ownerDpi.DpiScaleY;
+            return;
+        }
+
+        ApplyDeviceBounds();
+    }
+
+    private void ApplyDeviceBounds()
+    {
+        if (_applyingBounds || _deviceBounds is not { } b) return;
+        var hwnd = new WindowInteropHelper(this).Handle;
+        if (hwnd == IntPtr.Zero) return;
+
+        _applyingBounds = true;
+        try { SetWindowPos(hwnd, IntPtr.Zero, b.X, b.Y, b.Cx, b.Cy, SWP_NOZORDER | SWP_NOACTIVATE); }
+        finally { _applyingBounds = false; }
+    }
+
+    protected override void OnSourceInitialized(EventArgs e)
+    {
+        base.OnSourceInitialized(e);
+        // Runs right after the HWND is created and before the first paint, so the
+        // window is already the right size when it becomes visible.
+        ApplyDeviceBounds();
+    }
+
+    protected override void OnDpiChanged(DpiScale oldDpi, DpiScale newDpi)
+    {
+        base.OnDpiChanged(oldDpi, newDpi);
+        // WPF applies the OS-suggested rect (old size × DPI ratio); put ours back.
+        ApplyDeviceBounds();
+    }
+
+    private const uint SWP_NOZORDER   = 0x0004;
+    private const uint SWP_NOACTIVATE = 0x0010;
+
+    [DllImport("user32.dll")]
+    private static extern bool SetWindowPos(
+        IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
+
 
     public async Task InitializeAsync()
     {

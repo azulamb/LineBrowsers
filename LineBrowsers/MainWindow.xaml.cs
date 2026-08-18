@@ -51,7 +51,11 @@ public partial class MainWindow : Window
                     Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                     "LineBrowsers", "Profiles", session.SessionId);
 
-        var env = await CoreWebView2Environment.CreateAsync(null, session.ProfilePath);
+        var options = new CoreWebView2EnvironmentOptions
+        {
+            AdditionalBrowserArguments = "--disable-features=CalculateNativeWinOcclusion,DirectCompositionOverlays --disable-accelerated-video-decode"
+        };
+        var env = await CoreWebView2Environment.CreateAsync(null, session.ProfilePath, options);
         _environments[session.SessionId] = env;
         return env;
     }
@@ -146,10 +150,15 @@ public partial class MainWindow : Window
         await win.InitializeAsync();
     }
 
+    // Bounds are computed in physical pixels and handed to the preview window as
+    // pixels: GetMonitorInfo already returns device coordinates, and WPF's
+    // Left/Top/Width/Height are DIPs that would be scaled a second time by the
+    // window's own DPI (a 175% display made the preview 1.75x too large).
     private void UpdatePreviewBounds()
     {
         if (_previewWindow == null) return;
 
+        var dpi = System.Windows.Media.VisualTreeHelper.GetDpi(this);
         double left, top, width, height;
         if (WindowState == WindowState.Maximized)
         {
@@ -165,16 +174,18 @@ public partial class MainWindow : Window
         }
         else
         {
-            left   = Left;
-            top    = Top;
-            width  = ActualWidth;
-            height = ActualHeight;
+            left   = Left        * dpi.DpiScaleX;
+            top    = Top         * dpi.DpiScaleY;
+            width  = ActualWidth * dpi.DpiScaleX;
+            height = ActualHeight * dpi.DpiScaleY;
         }
 
-        _previewWindow.Left   = left + width / 2;
-        _previewWindow.Top    = top;
-        _previewWindow.Width  = width / 2;
-        _previewWindow.Height = height;
+        _previewWindow.SetDeviceBounds(
+            (int)Math.Round(left + width / 2),
+            (int)Math.Round(top),
+            (int)Math.Round(width / 2),
+            (int)Math.Round(height),
+            dpi);
     }
 
     // Win32 helpers for monitor detection
